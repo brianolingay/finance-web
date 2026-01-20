@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/brianolingay/Library/Application Support/Herd/bin/php84",
+            "args": [
+                "/Users/brianolingay/Dev/personal/finance-tracker/ft-web/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}
