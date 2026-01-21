@@ -386,6 +386,7 @@ $pages->assertNoJavascriptErrors()->assertNoConsoleLogs();
 
 ## Inertia + React
 
+- No useEffect fetching. Inertia props only.
 - Use `router.visit()` or `<Link>` for navigation instead of traditional links.
 
 <code-snippet name="Inertia Client Navigation" lang="react">
