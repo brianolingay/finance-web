@@ -16,6 +16,16 @@ class SalaryRule extends Model
     use SoftDeletes;
 
     /**
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * @var string
+     */
+    protected $keyType = 'string';
+
+    /**
      * @var list<string>
      */
     protected $fillable = [
@@ -27,6 +37,16 @@ class SalaryRule extends Model
         'currency',
         'is_active',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'is_active' => 'boolean',
+        ];
+    }
 
     protected static function booted(): void
     {
