@@ -8,6 +8,7 @@ import { Pagination } from '@/components/tables/pagination';
 import AppLayout from '@/layouts/app-layout';
 import { formatCents } from '@/lib/money';
 import { index as productsIndex } from '@/routes/accounts/inventory/products';
+
 import { type BreadcrumbItem } from '@/types';
 import { type PaginatedResponse } from '@/types/api';
 import { type AccountSummary, type Product } from '@/types/domain';
@@ -68,7 +69,7 @@ export default function ProductsIndex({ account, products }: ProductsPageProps) 
                                 key: 'unit_cost',
                                 label: 'Unit cost',
                                 render: (product) =>
-                                    product.unit_cost_cents
+                                    product.unit_cost_cents != null
                                         ? formatCents(
                                               product.unit_cost_cents,
                                           )
@@ -78,7 +79,7 @@ export default function ProductsIndex({ account, products }: ProductsPageProps) 
                                 key: 'unit_price',
                                 label: 'Unit price',
                                 render: (product) =>
-                                    product.unit_price_cents
+                                    product.unit_price_cents != null
                                         ? formatCents(
                                               product.unit_price_cents,
                                           )
@@ -90,7 +91,7 @@ export default function ProductsIndex({ account, products }: ProductsPageProps) 
                                 render: (product) => (
                                     <StockBadge
                                         status={
-                                            product.unit_price_cents
+                                            product.unit_price_cents != null
                                                 ? 'priced'
                                                 : 'unpriced'
                                         }

@@ -24,11 +24,15 @@ class StoreGoodsReceiptRequest extends FormRequest
     {
         $account = $this->route('account');
 
+        if (! $account) {
+            abort(400, 'Account context required.');
+        }
+
         return [
             'supplier_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('suppliers', 'id')->where('account_id', $account?->id),
+                Rule::exists('suppliers', 'id')->where('account_id', $account->id),
             ],
             'reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -37,7 +41,7 @@ class StoreGoodsReceiptRequest extends FormRequest
             'items.*.product_id' => [
                 'required',
                 'integer',
-                Rule::exists('products', 'id')->where('account_id', $account?->id),
+                Rule::exists('products', 'id')->where('account_id', $account->id),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'items.*.unit_cost_cents' => ['required', 'integer', 'min:0'],

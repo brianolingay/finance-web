@@ -15,7 +15,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+
 import { create as newSale } from '@/routes/accounts/pos/sales';
+
 import { type BreadcrumbItem } from '@/types';
 import { type AccountSummary, type Product } from '@/types/domain';
 

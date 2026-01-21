@@ -14,13 +14,32 @@ class AccountDashboardController extends Controller
             ->latest('occurred_at')
             ->paginate(10);
 
-        $creditTotal = (int) $account->transactions()
+        $creditTotals = $account->transactions()
             ->where('direction', 'credit')
-            ->sum('amount_cents');
+            ->selectRaw('currency, SUM(amount_cents) as total_cents')
+            ->groupBy('currency')
+            ->pluck('total_cents', 'currency')
+            ->map(fn ($total): int => (int) $total)
+            ->all();
 
-        $debitTotal = (int) $account->transactions()
+        $debitTotals = $account->transactions()
             ->where('direction', 'debit')
-            ->sum('amount_cents');
+            ->selectRaw('currency, SUM(amount_cents) as total_cents')
+            ->groupBy('currency')
+            ->pluck('total_cents', 'currency')
+            ->map(fn ($total): int => (int) $total)
+            ->all();
+
+        $netTotals = collect(array_keys($creditTotals))
+            ->merge(array_keys($debitTotals))
+            ->unique()
+            ->mapWithKeys(function (string $currency) use ($creditTotals, $debitTotals): array {
+                $creditTotal = $creditTotals[$currency] ?? 0;
+                $debitTotal = $debitTotals[$currency] ?? 0;
+
+                return [$currency => $creditTotal - $debitTotal];
+            })
+            ->all();
 
         return Inertia::render('accounts/dashboard', [
             'account' => [
@@ -29,9 +48,9 @@ class AccountDashboardController extends Controller
                 'type' => $account->type,
             ],
             'totals' => [
-                'credit_cents' => $creditTotal,
-                'debit_cents' => $debitTotal,
-                'net_cents' => $creditTotal - $debitTotal,
+                'credit_cents' => $creditTotals,
+                'debit_cents' => $debitTotals,
+                'net_cents' => $netTotals,
             ],
             'transactions' => $transactions,
         ]);

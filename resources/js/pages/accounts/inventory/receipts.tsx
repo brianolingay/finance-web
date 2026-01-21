@@ -1,8 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
-import GoodsReceiptController from '@/actions/App/Http/Controllers/GoodsReceiptController';
-import InventoryPurchaseController from '@/actions/App/Http/Controllers/InventoryPurchaseController';
 import { DateInput } from '@/components/forms/date-input';
 import { FormField } from '@/components/forms/form-field';
 import { MoneyInput } from '@/components/forms/money-input';
@@ -15,10 +13,14 @@ import { EmptyState } from '@/components/tables/empty-state';
 import { Pagination } from '@/components/tables/pagination';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+
 import AppLayout from '@/layouts/app-layout';
+
 import { formatDate } from '@/lib/format';
 import { formatCents } from '@/lib/money';
+
 import { create as receiptsCreate } from '@/routes/accounts/inventory/receipts';
+
 import { type BreadcrumbItem } from '@/types';
 import { type PaginatedResponse } from '@/types/api';
 import {
@@ -26,6 +28,9 @@ import {
     type GoodsReceiptSummary,
     type Product,
 } from '@/types/domain';
+
+import GoodsReceiptController from '@/actions/App/Http/Controllers/GoodsReceiptController';
+import InventoryPurchaseController from '@/actions/App/Http/Controllers/InventoryPurchaseController';
 
 interface Supplier {
     id: number;
@@ -288,7 +293,6 @@ export default function InventoryReceipts({
                                             <SubmitBar
                                                 actionLabel="Record payment"
                                                 processing={processing}
-                                                disabled={!purchaseReceiptId}
                                             />
                                         </>
                                     )}

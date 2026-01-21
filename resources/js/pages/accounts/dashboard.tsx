@@ -13,9 +13,9 @@ import { type AccountSummary, type Transaction } from '@/types/domain';
 interface AccountDashboardProps {
     account: AccountSummary;
     totals: {
-        credit_cents: number;
-        debit_cents: number;
-        net_cents: number;
+        credit_cents: Record<string, number>;
+        debit_cents: Record<string, number>;
+        net_cents: Record<string, number>;
     };
     transactions: PaginatedResponse<Transaction>;
 }
@@ -25,6 +25,63 @@ export default function AccountDashboard({
     totals,
     transactions,
 }: AccountDashboardProps) {
+    const currencies = Array.from(
+        new Set([
+            ...Object.keys(totals.credit_cents),
+            ...Object.keys(totals.debit_cents),
+            ...Object.keys(totals.net_cents),
+        ]),
+    );
+
+    const summaryItems =
+        currencies.length > 0
+            ? currencies.flatMap((currency) => {
+                  const creditTotal = totals.credit_cents[currency] ?? 0;
+                  const debitTotal = totals.debit_cents[currency] ?? 0;
+                  const netTotal = totals.net_cents[currency] ?? 0;
+
+                  return [
+                      {
+                          label: `Total credits (${currency})`,
+                          amountCents: creditTotal,
+                          currency,
+                          tone: 'positive' as const,
+                      },
+                      {
+                          label: `Total debits (${currency})`,
+                          amountCents: debitTotal,
+                          currency,
+                          tone: 'negative' as const,
+                      },
+                      {
+                          label: `Net total (${currency})`,
+                          amountCents: netTotal,
+                          currency,
+                          tone:
+                              netTotal >= 0
+                                  ? ('positive' as const)
+                                  : ('negative' as const),
+                      },
+                  ];
+              })
+            : [
+                  {
+                      label: 'Total credits',
+                      amountCents: 0,
+                      tone: 'positive' as const,
+                  },
+                  {
+                      label: 'Total debits',
+                      amountCents: 0,
+                      tone: 'negative' as const,
+                  },
+                  {
+                      label: 'Net total',
+                      amountCents: 0,
+                      tone: 'positive' as const,
+                  },
+              ];
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
@@ -44,23 +101,7 @@ export default function AccountDashboard({
                 />
 
                 <SummaryCards
-                    items={[
-                        {
-                            label: 'Total credits',
-                            amountCents: totals.credit_cents,
-                            tone: 'positive',
-                        },
-                        {
-                            label: 'Total debits',
-                            amountCents: totals.debit_cents,
-                            tone: 'negative',
-                        },
-                        {
-                            label: 'Net total',
-                            amountCents: totals.net_cents,
-                            tone: totals.net_cents >= 0 ? 'positive' : 'negative',
-                        },
-                    ]}
+                    items={summaryItems}
                 />
 
                 <section className="flex flex-col gap-4">

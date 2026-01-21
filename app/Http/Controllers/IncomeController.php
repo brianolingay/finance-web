@@ -21,8 +21,12 @@ class IncomeController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $totalCents = (int) $account->incomes()
-            ->sum('amount_cents');
+        $totalCents = $account->incomes()
+            ->selectRaw('currency, SUM(amount_cents) as total_cents')
+            ->groupBy('currency')
+            ->pluck('total_cents', 'currency')
+            ->map(fn ($total): int => (int) $total)
+            ->all();
 
         return Inertia::render('accounts/incomes/index', [
             'account' => [

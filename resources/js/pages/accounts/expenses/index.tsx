@@ -22,9 +22,12 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import AppLayout from '@/layouts/app-layout';
+
 import { formatDate } from '@/lib/format';
 import { formatCents } from '@/lib/money';
+
 import { index as expensesIndex } from '@/routes/accounts/expenses';
+
 import { type BreadcrumbItem } from '@/types';
 import { type PaginatedResponse } from '@/types/api';
 import { type AccountSummary, type Category, type Expense } from '@/types/domain';
@@ -34,7 +37,7 @@ interface ExpensesPageProps {
     categories: Category[];
     expenses: PaginatedResponse<Expense>;
     totals: {
-        total_cents: number;
+        total_cents: Record<string, number>;
     };
 }
 
@@ -44,6 +47,15 @@ export default function ExpensesIndex({
     expenses,
     totals,
 }: ExpensesPageProps) {
+    const summaryItems = Object.entries(totals.total_cents).map(
+        ([currency, amountCents]) => ({
+            label: `Total expenses (${currency})`,
+            amountCents,
+            currency,
+            tone: 'negative' as const,
+        }),
+    );
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Expenses',
@@ -159,13 +171,17 @@ export default function ExpensesIndex({
                 />
 
                 <SummaryCards
-                    items={[
-                        {
-                            label: 'Total expenses',
-                            amountCents: totals.total_cents,
-                            tone: 'negative',
-                        },
-                    ]}
+                    items={
+                        summaryItems.length > 0
+                            ? summaryItems
+                            : [
+                                  {
+                                      label: 'Total expenses',
+                                      amountCents: 0,
+                                      tone: 'negative',
+                                  },
+                              ]
+                    }
                     className="md:grid-cols-1"
                 />
 

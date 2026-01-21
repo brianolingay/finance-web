@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Ledger\RecordTransactionAction;
 use App\Models\Account;
 use App\Models\Expense;
 use App\Models\Income;
@@ -32,7 +33,7 @@ it('returns expense totals on the expenses index', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('accounts/expenses/index')
-            ->where('totals.total_cents', 2000)
+            ->where('totals.total_cents.USD', 2000)
         );
 });
 
@@ -55,6 +56,51 @@ it('returns income totals on the incomes index', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('accounts/incomes/index')
-            ->where('totals.total_cents', 10000)
+            ->where('totals.total_cents.USD', 10000)
+        );
+});
+
+it('returns dashboard totals grouped by currency', function () {
+    $account = Account::factory()->create();
+    $owner = User::query()->findOrFail($account->owner_user_id);
+
+    $income = Income::factory()->create([
+        'account_id' => $account->id,
+        'amount_cents' => 5000,
+        'currency' => 'USD',
+    ]);
+
+    $expense = Expense::factory()->create([
+        'account_id' => $account->id,
+        'amount_cents' => 2000,
+        'currency' => 'USD',
+    ]);
+
+    app(RecordTransactionAction::class)->run(
+        $account->id,
+        'credit',
+        $income->amount_cents,
+        $income->currency,
+        $income,
+        $income->occurred_at,
+    );
+
+    app(RecordTransactionAction::class)->run(
+        $account->id,
+        'debit',
+        $expense->amount_cents,
+        $expense->currency,
+        $expense,
+        $expense->occurred_at,
+    );
+
+    $this->actingAs($owner)
+        ->get(route('accounts.dashboard', $account))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('accounts/dashboard')
+            ->where('totals.credit_cents.USD', 5000)
+            ->where('totals.debit_cents.USD', 2000)
+            ->where('totals.net_cents.USD', 3000)
         );
 });

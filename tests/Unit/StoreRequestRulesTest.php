@@ -2,12 +2,14 @@
 
 use App\Http\Requests\StoreCashierSalaryRequest;
 use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Requests\StoreGoodsReceiptRequest;
 use App\Http\Requests\StoreIncomeRequest;
 use App\Http\Requests\StoreInventoryPurchaseRequest;
 use App\Http\Requests\StoreSaleRequest;
+use App\Models\Account;
 use App\Models\Sale;
-use Illuminate\Database\Eloquent\Factories\Factory as EloquentFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
@@ -48,9 +50,20 @@ it('aborts when inventory purchase rules are requested without an account route'
     expect(fn () => $request->rules())->toThrow(NotFoundHttpException::class);
 });
 
-it('returns a cashier factory for sale relationships', function () {
-    $definition = Sale::factory()->definition();
-    $cashierFactory = $definition['cashier_id'](['account_id' => 123]);
+it('aborts when goods receipt rules are requested without an account route', function () {
+    $request = StoreGoodsReceiptRequest::create('/', 'POST');
+    $request->setRouteResolver(fn () => null);
 
-    expect($cashierFactory)->toBeInstanceOf(EloquentFactory::class);
+    expect(fn () => $request->rules())
+        ->toThrow(HttpException::class, 'Account context required.');
+});
+
+it('creates a cashier attached to the same account as the sale', function () {
+    $account = Account::factory()->create();
+    $sale = Sale::factory()->for($account)->create();
+
+    $sale->load('cashier');
+
+    expect($sale->cashier)->not->toBeNull()
+        ->and($sale->cashier->account_id)->toBe($account->id);
 });

@@ -15,22 +15,40 @@ export function Pagination({ links }: { links: PaginationLink[] }) {
 
     return (
         <div className="flex flex-wrap items-center gap-2">
-            {links.map((link, index) => (
-                <Link
-                    key={link.url ?? `page-${index}`}
-                    href={link.url ?? '#'}
-                    preserveScroll
-                    className={cn(
-                        'rounded-md border border-border px-3 py-1.5 text-sm transition-colors',
-                        link.active
-                            ? 'border-foreground text-foreground'
-                            : 'text-muted-foreground hover:text-foreground',
-                        link.url ? '' : 'pointer-events-none opacity-60',
-                    )}
-                >
-                    {decodeHtmlEntities(link.label)}
-                </Link>
-            ))}
+            {links.map((link, index) => {
+                const className = cn(
+                    'rounded-md border border-border px-3 py-1.5 text-sm transition-colors',
+                    link.active
+                        ? 'border-foreground text-foreground'
+                        : 'text-muted-foreground hover:text-foreground',
+                    link.url ? null : 'opacity-60',
+                );
+
+                const key = link.url ?? `page-${index}`;
+
+                if (! link.url) {
+                    return (
+                        <span
+                            key={key}
+                            aria-disabled="true"
+                            className={className}
+                        >
+                            {decodeHtmlEntities(link.label)}
+                        </span>
+                    );
+                }
+
+                return (
+                    <Link
+                        key={key}
+                        href={link.url}
+                        preserveScroll
+                        className={className}
+                    >
+                        {decodeHtmlEntities(link.label)}
+                    </Link>
+                );
+            })}
         </div>
     );
 }

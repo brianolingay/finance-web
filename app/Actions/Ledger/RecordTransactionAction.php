@@ -16,7 +16,13 @@ class RecordTransactionAction
         Model $source,
         CarbonInterface $occurredAt,
     ): Transaction {
-        return Transaction::query()->firstOrCreate(
+        if (! in_array($direction, ['debit', 'credit'], true)) {
+            throw new \InvalidArgumentException(
+                "CreateTransactionListener supplied invalid transaction direction [{$direction}]. Expected 'debit' or 'credit'.",
+            );
+        }
+
+        return Transaction::query()->updateOrCreate(
             [
                 'source_type' => $source->getMorphClass(),
                 'source_id' => $source->getKey(),

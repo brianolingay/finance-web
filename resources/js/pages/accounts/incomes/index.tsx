@@ -22,9 +22,12 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import AppLayout from '@/layouts/app-layout';
+
 import { formatDate } from '@/lib/format';
 import { formatCents } from '@/lib/money';
+
 import { index as incomesIndex } from '@/routes/accounts/incomes';
+
 import { type BreadcrumbItem } from '@/types';
 import { type PaginatedResponse } from '@/types/api';
 import { type AccountSummary, type Category, type Income } from '@/types/domain';
@@ -34,7 +37,7 @@ interface IncomesPageProps {
     categories: Category[];
     incomes: PaginatedResponse<Income>;
     totals: {
-        total_cents: number;
+        total_cents: Record<string, number>;
     };
 }
 
@@ -44,6 +47,15 @@ export default function IncomesIndex({
     incomes,
     totals,
 }: IncomesPageProps) {
+    const summaryItems = Object.entries(totals.total_cents).map(
+        ([currency, amountCents]) => ({
+            label: `Total incomes (${currency})`,
+            amountCents,
+            currency,
+            tone: 'positive' as const,
+        }),
+    );
+
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Incomes',
@@ -159,13 +171,17 @@ export default function IncomesIndex({
                 />
 
                 <SummaryCards
-                    items={[
-                        {
-                            label: 'Total incomes',
-                            amountCents: totals.total_cents,
-                            tone: 'positive',
-                        },
-                    ]}
+                    items={
+                        summaryItems.length > 0
+                            ? summaryItems
+                            : [
+                                  {
+                                      label: 'Total incomes',
+                                      amountCents: 0,
+                                      tone: 'positive',
+                                  },
+                              ]
+                    }
                     className="md:grid-cols-1"
                 />
 

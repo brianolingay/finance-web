@@ -6,6 +6,7 @@ use App\Events\IncomeCreated;
 use App\Models\Account;
 use App\Models\Income;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CreateIncomeAction
@@ -33,18 +34,22 @@ class CreateIncomeAction
             ? Carbon::parse($data['occurred_at'])
             : now();
 
-        $income = Income::query()->create([
-            'account_id' => $account->id,
-            'category_id' => $data['category_id'] ?? null,
-            'description' => $data['description'] ?? null,
-            'status' => $data['status'] ?? 'posted',
-            'amount_cents' => $data['amount_cents'],
-            'currency' => $data['currency'],
-            'occurred_at' => $occurredAt,
-            'paid_at' => isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : null,
-        ]);
+        $income = DB::transaction(function () use ($account, $data, $occurredAt): Income {
+            $income = Income::query()->create([
+                'account_id' => $account->id,
+                'category_id' => $data['category_id'] ?? null,
+                'description' => $data['description'] ?? null,
+                'status' => $data['status'] ?? 'posted',
+                'amount_cents' => $data['amount_cents'],
+                'currency' => $data['currency'],
+                'occurred_at' => $occurredAt,
+                'paid_at' => isset($data['paid_at']) ? Carbon::parse($data['paid_at']) : null,
+            ]);
 
-        event(new IncomeCreated($income));
+            event(new IncomeCreated($income));
+
+            return $income;
+        });
 
         return $income;
     }

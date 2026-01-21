@@ -33,7 +33,13 @@ export function SaleItemRow({
                         {formatCents(unitPriceCents)} each
                     </span>
                 </div>
-                <Button type="button" variant="ghost" size="icon" onClick={onRemove}>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={onRemove}
+                    aria-label="Remove item"
+                >
                     <Trash2 className="h-4 w-4" />
                 </Button>
             </div>

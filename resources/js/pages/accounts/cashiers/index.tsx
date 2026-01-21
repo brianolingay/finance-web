@@ -3,6 +3,9 @@ import { useState } from 'react';
 
 import CashierController from '@/actions/App/Http/Controllers/CashierController';
 import CashierSalaryController from '@/actions/App/Http/Controllers/CashierSalaryController';
+import AppLayout from '@/layouts/app-layout';
+import { index as cashiersIndex } from '@/routes/accounts/cashiers';
+
 import { DateInput } from '@/components/forms/date-input';
 import { FormField } from '@/components/forms/form-field';
 import { MoneyInput } from '@/components/forms/money-input';
@@ -22,8 +25,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import AppLayout from '@/layouts/app-layout';
-import { index as cashiersIndex } from '@/routes/accounts/cashiers';
+
 import { type BreadcrumbItem } from '@/types';
 import { type PaginatedResponse } from '@/types/api';
 import { type AccountSummary, type Cashier } from '@/types/domain';

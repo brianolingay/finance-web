@@ -21,8 +21,12 @@ class ExpenseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $totalCents = (int) $account->expenses()
-            ->sum('amount_cents');
+        $totalCents = $account->expenses()
+            ->selectRaw('currency, SUM(amount_cents) as total_cents')
+            ->groupBy('currency')
+            ->pluck('total_cents', 'currency')
+            ->map(fn ($total): int => (int) $total)
+            ->all();
 
         return Inertia::render('accounts/expenses/index', [
             'account' => [
