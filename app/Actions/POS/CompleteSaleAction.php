@@ -2,54 +2,52 @@
 
 namespace App\Actions\POS;
 
+use App\DTOs\SaleData;
 use App\Events\SaleCompleted;
 use App\Models\Account;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalePayment;
-use Illuminate\Support\Carbon;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class CompleteSaleAction
 {
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function run(Account $account, array $data): Sale
+    public function run(Account $account, SaleData $data, ?User $user = null): Sale
     {
-        $occurredAt = isset($data['occurred_at'])
-            ? Carbon::parse($data['occurred_at'])
-            : now();
+        $occurredAt = $data->occurredAt ?? now();
 
-        $sale = DB::transaction(function () use ($account, $data, $occurredAt): Sale {
-            $items = collect($data['items'] ?? []);
+        $sale = DB::transaction(function () use ($account, $data, $occurredAt, $user): Sale {
+            $cashierId = $data->cashierId;
 
-            if ($items->isEmpty()) {
+            if ($cashierId === null && $user !== null) {
+                $cashierId = $account->cashiers()
+                    ->where('user_id', $user->id)
+                    ->value('id');
+            }
+
+            if ($data->items === []) {
                 throw ValidationException::withMessages([
                     'items' => 'At least one item is required.',
                 ]);
             }
 
-            $items = $items->map(function (array $item) {
-                $lineTotal = (int) $item['quantity'] * (int) $item['unit_price_cents'];
-
-                return [
-                    'product_id' => (int) $item['product_id'],
-                    'quantity' => (int) $item['quantity'],
-                    'unit_price_cents' => (int) $item['unit_price_cents'],
-                    'line_total_cents' => $lineTotal,
-                ];
-            });
+            $items = collect($data->items)->map(fn ($item) => [
+                'product_id' => $item->productId,
+                'quantity' => $item->quantity,
+                'unit_price_cents' => $item->unitPriceCents,
+                'line_total_cents' => $item->lineTotalCents(),
+            ]);
 
             $totalCents = (int) $items->sum('line_total_cents');
 
             $sale = Sale::query()->create([
                 'account_id' => $account->id,
-                'cashier_id' => $data['cashier_id'] ?? null,
+                'cashier_id' => $cashierId,
                 'status' => 'completed',
                 'total_cents' => $totalCents,
-                'currency' => $data['currency'],
+                'currency' => $data->currency,
                 'occurred_at' => $occurredAt,
             ]);
 
@@ -63,18 +61,14 @@ class CompleteSaleAction
                 ]);
             });
 
-            if (! empty($data['payment'])) {
-                $payment = $data['payment'];
-
+            if ($data->payment !== null) {
                 SalePayment::query()->create([
                     'sale_id' => $sale->id,
-                    'amount_cents' => $payment['amount_cents'],
-                    'currency' => $data['currency'],
-                    'method' => $payment['method'] ?? null,
-                    'reference' => $payment['reference'] ?? null,
-                    'paid_at' => isset($payment['paid_at'])
-                        ? Carbon::parse($payment['paid_at'])
-                        : $occurredAt,
+                    'amount_cents' => $data->payment->amountCents,
+                    'currency' => $data->currency,
+                    'method' => $data->payment->method,
+                    'reference' => $data->payment->reference,
+                    'paid_at' => $data->payment->paidAt ?? $occurredAt,
                 ]);
             }
 

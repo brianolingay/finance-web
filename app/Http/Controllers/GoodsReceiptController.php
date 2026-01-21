@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Inventory\CreateGoodsReceiptAction;
+use App\Actions\Inventory\GoodsReceiptIndexQuery;
+use App\DTOs\GoodsReceiptData;
 use App\Http\Requests\StoreGoodsReceiptRequest;
+use App\Http\Resources\GoodsReceiptResource;
+use App\Http\Resources\ProductResource;
 use App\Models\Account;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -11,28 +15,22 @@ use Inertia\Response;
 
 class GoodsReceiptController extends Controller
 {
-    public function create(Account $account): Response
+    public function create(Account $account, GoodsReceiptIndexQuery $query): Response
     {
-        $products = $account->products()
-            ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'unit_cost_cents']);
+        $this->authorize('manage-inventory', $account);
 
-        $suppliers = $account->suppliers()
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        $receipts = $account->goodsReceipts()
-            ->latest('received_at')
-            ->paginate(10);
+        $payload = $query->run($account);
 
         return Inertia::render('accounts/inventory/receipts', [
             'account' => [
                 'id' => $account->id,
                 'name' => $account->name,
             ],
-            'products' => $products,
-            'suppliers' => $suppliers,
-            'receipts' => $receipts,
+            'products' => ProductResource::collection($payload['products'])->resolve(),
+            'suppliers' => $payload['suppliers'],
+            'receipts' => $payload['receipts']->through(
+                fn ($receipt) => GoodsReceiptResource::make($receipt)->resolve(),
+            ),
         ]);
     }
 
@@ -41,7 +39,9 @@ class GoodsReceiptController extends Controller
         Account $account,
         CreateGoodsReceiptAction $action,
     ): RedirectResponse {
-        $action->run($account, $request->validated());
+        $this->authorize('manage-inventory', $account);
+
+        $action->run($account, GoodsReceiptData::fromRequest($request));
 
         return redirect()->route('accounts.inventory.receipts.create', $account);
     }

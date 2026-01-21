@@ -2,64 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Payroll\CashiersIndexQuery;
+use App\Actions\Payroll\InviteCashierAction;
+use App\DTOs\CashierInviteData;
 use App\Http\Requests\StoreCashierRequest;
+use App\Http\Resources\CashierResource;
 use App\Models\Account;
-use App\Models\AccountMember;
-use App\Models\Cashier;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CashierController extends Controller
 {
-    public function index(Account $account): Response
+    public function index(Account $account, CashiersIndexQuery $query): Response
     {
-        $cashiers = $account->cashiers()
-            ->with('user')
-            ->latest()
-            ->paginate(10);
+        $this->authorize('manage-cashiers', $account);
+
+        $payload = $query->run($account);
 
         return Inertia::render('accounts/cashiers/index', [
             'account' => [
                 'id' => $account->id,
                 'name' => $account->name,
             ],
-            'cashiers' => $cashiers,
+            'cashiers' => $payload['cashiers']->through(
+                fn ($cashier) => CashierResource::make($cashier)->resolve(),
+            ),
         ]);
     }
 
     public function store(
         StoreCashierRequest $request,
         Account $account,
+        InviteCashierAction $action,
     ): RedirectResponse {
-        $data = $request->validated();
+        $this->authorize('manage-cashiers', $account);
 
-        DB::transaction(function () use ($account, $data): void {
-            $user = User::query()->where('email', $data['email'])->firstOrFail();
-
-            AccountMember::query()->firstOrCreate(
-                [
-                    'account_id' => $account->id,
-                    'user_id' => $user->id,
-                ],
-                [
-                    'role' => 'cashier',
-                ],
-            );
-
-            Cashier::query()->firstOrCreate(
-                [
-                    'account_id' => $account->id,
-                    'user_id' => $user->id,
-                ],
-                [
-                    'name' => $data['name'] ?? $user->name,
-                    'status' => 'active',
-                ],
-            );
-        });
+        $action->run($account, CashierInviteData::fromRequest($request));
 
         return redirect()->route('accounts.cashiers.index', $account);
     }

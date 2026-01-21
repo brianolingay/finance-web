@@ -2,6 +2,10 @@
 
 use App\Actions\Inventory\CreateGoodsReceiptAction;
 use App\Actions\POS\CompleteSaleAction;
+use App\DTOs\GoodsReceiptData;
+use App\DTOs\GoodsReceiptItemData;
+use App\DTOs\SaleData;
+use App\DTOs\SaleItemData;
 use App\Models\Account;
 use App\Models\Cashier;
 use App\Models\InventoryMovement;
@@ -21,17 +25,13 @@ it('creates inventory movements for completed sales', function () {
     ]);
     $product = Product::factory()->create(['account_id' => $account->id]);
 
-    app(CompleteSaleAction::class)->run($account, [
-        'cashier_id' => $cashier->id,
-        'currency' => 'USD',
-        'items' => [
-            [
-                'product_id' => $product->id,
-                'quantity' => 2,
-                'unit_price_cents' => 500,
-            ],
-        ],
-    ]);
+    app(CompleteSaleAction::class)->run($account, new SaleData(
+        $cashier->id,
+        'USD',
+        null,
+        [new SaleItemData($product->id, 2, 500)],
+        null,
+    ));
 
     $movement = InventoryMovement::query()
         ->where('account_id', $account->id)
@@ -51,28 +51,27 @@ it('rejects completed sales without items', function () {
         'user_id' => $user->id,
     ]);
 
-    expect(fn () => app(CompleteSaleAction::class)->run($account, [
-        'cashier_id' => $cashier->id,
-        'currency' => 'USD',
-        'items' => [],
-    ]))->toThrow(ValidationException::class);
+    expect(fn () => app(CompleteSaleAction::class)->run($account, new SaleData(
+        $cashier->id,
+        'USD',
+        null,
+        [],
+        null,
+    )))->toThrow(ValidationException::class);
 });
 
 it('creates inventory movements for goods receipts', function () {
     $account = Account::factory()->create();
     $product = Product::factory()->create(['account_id' => $account->id]);
 
-    app(CreateGoodsReceiptAction::class)->run($account, [
-        'supplier_id' => null,
-        'received_at' => now()->toDateTimeString(),
-        'items' => [
-            [
-                'product_id' => $product->id,
-                'quantity' => 5,
-                'unit_cost_cents' => 250,
-            ],
-        ],
-    ]);
+    app(CreateGoodsReceiptAction::class)->run($account, new GoodsReceiptData(
+        null,
+        null,
+        null,
+        null,
+        [new GoodsReceiptItemData($product->id, 5, 250)],
+        null,
+    ));
 
     $movement = InventoryMovement::query()
         ->where('account_id', $account->id)
@@ -88,9 +87,12 @@ it('creates inventory movements for goods receipts', function () {
 it('rejects goods receipts without items', function () {
     $account = Account::factory()->create();
 
-    expect(fn () => app(CreateGoodsReceiptAction::class)->run($account, [
-        'supplier_id' => null,
-        'received_at' => now()->toDateTimeString(),
-        'items' => [],
-    ]))->toThrow(ValidationException::class);
+    expect(fn () => app(CreateGoodsReceiptAction::class)->run($account, new GoodsReceiptData(
+        null,
+        null,
+        null,
+        null,
+        [],
+        null,
+    )))->toThrow(ValidationException::class);
 });

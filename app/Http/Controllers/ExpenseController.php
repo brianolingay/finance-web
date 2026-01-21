@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Finance\CreateExpenseAction;
+use App\Actions\Finance\ExpenseIndexQuery;
+use App\DTOs\ExpenseData;
 use App\Http\Requests\StoreExpenseRequest;
+use App\Http\Resources\ExpenseResource;
 use App\Models\Account;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -11,32 +14,23 @@ use Inertia\Response;
 
 class ExpenseController extends Controller
 {
-    public function index(Account $account): Response
+    public function index(Account $account, ExpenseIndexQuery $query): Response
     {
-        $expenses = $account->expenses()
-            ->latest('occurred_at')
-            ->paginate(10);
+        $this->authorize('manage-finance', $account);
 
-        $categories = $account->categories()
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        $totalCents = $account->expenses()
-            ->selectRaw('currency, SUM(amount_cents) as total_cents')
-            ->groupBy('currency')
-            ->pluck('total_cents', 'currency')
-            ->map(fn ($total): int => (int) $total)
-            ->all();
+        $payload = $query->run($account);
 
         return Inertia::render('accounts/expenses/index', [
             'account' => [
                 'id' => $account->id,
                 'name' => $account->name,
             ],
-            'categories' => $categories,
-            'expenses' => $expenses,
+            'categories' => $payload['categories'],
+            'expenses' => $payload['expenses']->through(
+                fn ($expense) => ExpenseResource::make($expense)->resolve(),
+            ),
             'totals' => [
-                'total_cents' => $totalCents,
+                'total_cents' => $payload['totals'],
             ],
         ]);
     }
@@ -46,7 +40,9 @@ class ExpenseController extends Controller
         Account $account,
         CreateExpenseAction $action,
     ): RedirectResponse {
-        $action->run($account, $request->validated());
+        $this->authorize('manage-finance', $account);
+
+        $action->run($account, ExpenseData::fromRequest($request));
 
         return redirect()->route('accounts.expenses.index', $account);
     }

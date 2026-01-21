@@ -2,6 +2,7 @@
 
 use App\Actions\Inventory\RecordInventoryPurchasePaymentAction;
 use App\Actions\Ledger\RecordTransactionAction;
+use App\DTOs\InventoryPurchaseData;
 use App\Models\Account;
 use App\Models\InventoryPurchase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,10 +19,14 @@ it('rolls back inventory purchases when transaction recording fails', function (
 
     $account = Account::factory()->create();
 
-    expect(fn () => app(RecordInventoryPurchasePaymentAction::class)->run($account, [
-        'total_cents' => 5400,
-        'currency' => 'USD',
-    ]))->toThrow(RuntimeException::class);
+    expect(fn () => app(RecordInventoryPurchasePaymentAction::class)->run($account, new InventoryPurchaseData(
+        null,
+        null,
+        5400,
+        'USD',
+        null,
+        null,
+    )))->toThrow(RuntimeException::class);
 
     expect(InventoryPurchase::query()->count())->toBe(0);
 });

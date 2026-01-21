@@ -2,33 +2,33 @@
 
 namespace App\Actions\Payroll;
 
+use App\DTOs\CashierSalaryData;
 use App\Events\CashierSalaryCreated;
 use App\Models\Account;
 use App\Models\CashierSalary;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CreateCashierSalaryAction
 {
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    public function run(Account $account, array $data): CashierSalary
+    public function run(Account $account, CashierSalaryData $data): CashierSalary
     {
-        $paidAt = isset($data['paid_at'])
-            ? Carbon::parse($data['paid_at'])
-            : now();
+        $paidAt = $data->paidAt ?? now();
 
-        $salary = CashierSalary::query()->create([
-            'account_id' => $account->id,
-            'cashier_id' => $data['cashier_id'],
-            'salary_rule_id' => $data['salary_rule_id'] ?? null,
-            'amount_cents' => $data['amount_cents'],
-            'currency' => $data['currency'],
-            'paid_at' => $paidAt,
-            'status' => $data['status'] ?? 'paid',
-        ]);
+        $salary = DB::transaction(function () use ($account, $data, $paidAt): CashierSalary {
+            $salary = CashierSalary::query()->create([
+                'account_id' => $account->id,
+                'cashier_id' => $data->cashierId,
+                'salary_rule_id' => $data->salaryRuleId,
+                'amount_cents' => $data->amountCents,
+                'currency' => $data->currency,
+                'paid_at' => $paidAt,
+                'status' => $data->status ?? 'paid',
+            ]);
 
-        event(new CashierSalaryCreated($salary));
+            event(new CashierSalaryCreated($salary));
+
+            return $salary;
+        });
 
         return $salary;
     }
