@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Ledger\RecordTransactionAction;
+use App\DTOs\TransactionData;
 use App\Models\Account;
 use App\Models\Expense;
 use App\Models\Income;
@@ -76,23 +77,23 @@ it('returns dashboard totals grouped by currency', function () {
         'currency' => 'USD',
     ]);
 
-    app(RecordTransactionAction::class)->run(
+    app(RecordTransactionAction::class)->run(new TransactionData(
         $account->id,
         'credit',
         $income->amount_cents,
         $income->currency,
         $income,
         $income->occurred_at,
-    );
+    ));
 
-    app(RecordTransactionAction::class)->run(
+    app(RecordTransactionAction::class)->run(new TransactionData(
         $account->id,
         'debit',
         $expense->amount_cents,
         $expense->currency,
         $expense,
         $expense->occurred_at,
-    );
+    ));
 
     $this->actingAs($owner)
         ->get(route('accounts.dashboard', $account))

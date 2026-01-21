@@ -2,33 +2,25 @@
 
 namespace App\Actions\Inventory;
 
+use App\DTOs\InventoryMovementData;
 use App\Models\InventoryMovement;
-use Carbon\CarbonInterface;
-use Illuminate\Database\Eloquent\Model;
 
 class RecordInventoryMovementAction
 {
-    public function run(
-        int $accountId,
-        int $productId,
-        string $movementType,
-        int $quantityDelta,
-        ?int $unitCostCents,
-        Model $source,
-        CarbonInterface $occurredAt,
-    ): InventoryMovement {
+    public function run(InventoryMovementData $data): InventoryMovement
+    {
         return InventoryMovement::query()->firstOrCreate(
             [
-                'account_id' => $accountId,
-                'product_id' => $productId,
-                'movement_type' => $movementType,
-                'source_type' => $source->getMorphClass(),
-                'source_id' => $source->getKey(),
+                'account_id' => $data->accountId,
+                'product_id' => $data->productId,
+                'movement_type' => $data->movementType,
+                'source_type' => $data->source->getMorphClass(),
+                'source_id' => $data->source->getKey(),
             ],
             [
-                'quantity_delta' => $quantityDelta,
-                'unit_cost_cents' => $unitCostCents,
-                'occurred_at' => $occurredAt,
+                'quantity_delta' => $data->quantityDelta,
+                'unit_cost_cents' => $data->unitCostCents,
+                'occurred_at' => $data->occurredAt,
             ],
         );
     }

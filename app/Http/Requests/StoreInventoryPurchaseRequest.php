@@ -12,7 +12,13 @@ class StoreInventoryPurchaseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $account = $this->route('account');
+
+        if (! $account || ! $this->user()) {
+            return false;
+        }
+
+        return $this->user()->can('manage-inventory', $account);
     }
 
     /**
@@ -42,6 +48,7 @@ class StoreInventoryPurchaseRequest extends FormRequest
             'total_cents' => ['required', 'integer', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],
             'paid_at' => ['nullable', 'date'],
+            'status' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

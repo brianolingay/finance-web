@@ -12,7 +12,13 @@ class StoreSaleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $account = $this->route('account');
+
+        if (! $account || ! $this->user()) {
+            return false;
+        }
+
+        return $this->user()->can('create-sale', $account);
     }
 
     /**

@@ -50,6 +50,24 @@ it('aborts when inventory purchase rules are requested without an account route'
     expect(fn () => $request->rules())->toThrow(NotFoundHttpException::class);
 });
 
+it('includes a status rule for inventory purchases', function () {
+    $account = Account::factory()->create();
+    $request = StoreInventoryPurchaseRequest::create('/', 'POST');
+    $request->setRouteResolver(fn () => new class($account)
+    {
+        public function __construct(private Account $account) {}
+
+        public function parameter(string $key): ?Account
+        {
+            return $key === 'account' ? $this->account : null;
+        }
+    });
+
+    $rules = $request->rules();
+
+    expect($rules)->toHaveKey('status');
+});
+
 it('aborts when goods receipt rules are requested without an account route', function () {
     $request = StoreGoodsReceiptRequest::create('/', 'POST');
     $request->setRouteResolver(fn () => null);

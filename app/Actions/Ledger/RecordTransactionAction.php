@@ -2,37 +2,30 @@
 
 namespace App\Actions\Ledger;
 
+use App\DTOs\TransactionData;
 use App\Models\Transaction;
-use Carbon\CarbonInterface;
-use Illuminate\Database\Eloquent\Model;
 
 class RecordTransactionAction
 {
-    public function run(
-        int $accountId,
-        string $direction,
-        int $amountCents,
-        string $currency,
-        Model $source,
-        CarbonInterface $occurredAt,
-    ): Transaction {
-        if (! in_array($direction, ['debit', 'credit'], true)) {
+    public function run(TransactionData $data): Transaction
+    {
+        if (! in_array($data->direction, ['debit', 'credit'], true)) {
             throw new \InvalidArgumentException(
-                "CreateTransactionListener supplied invalid transaction direction [{$direction}]. Expected 'debit' or 'credit'.",
+                "CreateTransactionListener supplied invalid transaction direction [{$data->direction}]. Expected 'debit' or 'credit'.",
             );
         }
 
-        return Transaction::query()->updateOrCreate(
+        return Transaction::query()->firstOrCreate(
             [
-                'source_type' => $source->getMorphClass(),
-                'source_id' => $source->getKey(),
+                'source_type' => $data->source->getMorphClass(),
+                'source_id' => $data->source->getKey(),
             ],
             [
-                'account_id' => $accountId,
-                'direction' => $direction,
-                'amount_cents' => $amountCents,
-                'currency' => $currency,
-                'occurred_at' => $occurredAt,
+                'account_id' => $data->accountId,
+                'direction' => $data->direction,
+                'amount_cents' => $data->amountCents,
+                'currency' => $data->currency,
+                'occurred_at' => $data->occurredAt,
             ],
         );
     }

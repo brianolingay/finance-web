@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\POS\CompleteSaleAction;
+use App\Actions\POS\NewSaleQuery;
+use App\DTOs\SaleData;
 use App\Http\Requests\StoreSaleRequest;
+use App\Http\Resources\ProductResource;
 use App\Models\Account;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,23 +15,19 @@ use Inertia\Response;
 
 class SaleController extends Controller
 {
-    public function create(Request $request, Account $account): Response
+    public function create(Request $request, Account $account, NewSaleQuery $query): Response
     {
-        $products = $account->products()
-            ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'unit_price_cents']);
+        $this->authorize('create-sale', $account);
 
-        $cashierId = $account->cashiers()
-            ->where('user_id', $request->user()->id)
-            ->value('id');
+        $payload = $query->run($account, $request->user());
 
         return Inertia::render('accounts/pos/new-sale', [
             'account' => [
                 'id' => $account->id,
                 'name' => $account->name,
             ],
-            'cashierId' => $cashierId,
-            'products' => $products,
+            'cashierId' => $payload['cashierId'],
+            'products' => ProductResource::collection($payload['products'])->resolve(),
         ]);
     }
 
@@ -37,19 +36,7 @@ class SaleController extends Controller
         Account $account,
         CompleteSaleAction $action,
     ): RedirectResponse {
-        $data = $request->validated();
-
-        if (! isset($data['cashier_id'])) {
-            $cashierId = $account->cashiers()
-                ->where('user_id', $request->user()->id)
-                ->value('id');
-
-            if ($cashierId) {
-                $data['cashier_id'] = $cashierId;
-            }
-        }
-
-        $action->run($account, $data);
+        $action->run($account, SaleData::fromRequest($request), $request->user());
 
         return redirect()->route('accounts.pos.sales.create', $account);
     }

@@ -12,7 +12,13 @@ class StoreExpenseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $account = $this->route('account');
+
+        if (! $account || ! $this->user()) {
+            return false;
+        }
+
+        return $this->user()->can('manage-finance', $account);
     }
 
     /**

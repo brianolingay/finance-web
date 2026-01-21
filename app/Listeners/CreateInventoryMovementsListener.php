@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Actions\Inventory\RecordInventoryMovementAction;
+use App\DTOs\InventoryMovementData;
 use App\Events\GoodsReceiptCreated;
 use App\Events\SaleCompleted;
 
@@ -25,13 +26,15 @@ class CreateInventoryMovementsListener
 
             foreach ($sale->saleItems as $item) {
                 $this->recordInventoryMovementAction->run(
-                    $sale->account_id,
-                    $item->product_id,
-                    'sale',
-                    -1 * $item->quantity,
-                    null,
-                    $sale,
-                    $sale->occurred_at,
+                    new InventoryMovementData(
+                        $sale->account_id,
+                        $item->product_id,
+                        'sale',
+                        -1 * $item->quantity,
+                        null,
+                        $sale,
+                        $sale->occurred_at,
+                    ),
                 );
             }
 
@@ -43,13 +46,15 @@ class CreateInventoryMovementsListener
 
             foreach ($receipt->goodsReceiptItems as $item) {
                 $this->recordInventoryMovementAction->run(
-                    $receipt->account_id,
-                    $item->product_id,
-                    'purchase_receipt',
-                    $item->quantity,
-                    $item->unit_cost_cents,
-                    $receipt,
-                    $receipt->received_at,
+                    new InventoryMovementData(
+                        $receipt->account_id,
+                        $item->product_id,
+                        'purchase_receipt',
+                        $item->quantity,
+                        $item->unit_cost_cents,
+                        $receipt,
+                        $receipt->received_at,
+                    ),
                 );
             }
         }
