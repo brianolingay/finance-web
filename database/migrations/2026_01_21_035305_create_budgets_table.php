@@ -51,8 +51,11 @@ return new class extends Migration
     {
         $driver = DB::getDriverName();
 
-        if (in_array($driver, ['pgsql', 'mysql', 'sqlite'], true)) {
+        if (in_array($driver, ['pgsql', 'sqlite'], true)) {
             DB::statement('DROP INDEX IF EXISTS budgets_account_category_month_unique');
+            DB::statement('ALTER TABLE budgets DROP COLUMN category_key');
+        } elseif ($driver === 'mysql') {
+            DB::statement('DROP INDEX budgets_account_category_month_unique ON budgets');
             DB::statement('ALTER TABLE budgets DROP COLUMN category_key');
         } elseif ($driver === 'sqlsrv') {
             DB::statement('DROP INDEX budgets_account_category_month_unique ON budgets');
