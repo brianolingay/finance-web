@@ -36,8 +36,6 @@ class SaleController extends Controller
         Account $account,
         CompleteSaleAction $action,
     ): RedirectResponse {
-        $this->authorize('create-sale', $account);
-
         $action->run($account, SaleData::fromRequest($request), $request->user());
 
         return redirect()->route('accounts.pos.sales.create', $account);

@@ -5,6 +5,7 @@ namespace App\DTOs;
 use App\Http\Requests\StoreCashierSalaryRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
+use Throwable;
 
 class CashierSalaryData
 {
@@ -27,12 +28,22 @@ class CashierSalaryData
      */
     public static function fromArray(array $data): self
     {
+        $paidAt = null;
+
+        if (isset($data['paid_at'])) {
+            try {
+                $paidAt = Date::parse($data['paid_at'])->toImmutable();
+            } catch (Throwable) {
+                $paidAt = null;
+            }
+        }
+
         return new self(
             (int) $data['cashier_id'],
             isset($data['salary_rule_id']) ? (int) $data['salary_rule_id'] : null,
             (int) $data['amount_cents'],
             (string) $data['currency'],
-            isset($data['paid_at']) ? Date::parse($data['paid_at'])->toImmutable() : null,
+            $paidAt,
             $data['status'] ?? null,
         );
     }

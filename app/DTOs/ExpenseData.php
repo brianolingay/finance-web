@@ -5,6 +5,7 @@ namespace App\DTOs;
 use App\Http\Requests\StoreExpenseRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
+use Throwable;
 
 class ExpenseData
 {
@@ -28,14 +29,33 @@ class ExpenseData
      */
     public static function fromArray(array $data): self
     {
+        $occurredAt = null;
+        $paidAt = null;
+
+        if (isset($data['occurred_at'])) {
+            try {
+                $occurredAt = Date::parse($data['occurred_at'])->toImmutable();
+            } catch (Throwable) {
+                $occurredAt = null;
+            }
+        }
+
+        if (isset($data['paid_at'])) {
+            try {
+                $paidAt = Date::parse($data['paid_at'])->toImmutable();
+            } catch (Throwable) {
+                $paidAt = null;
+            }
+        }
+
         return new self(
             isset($data['category_id']) ? (int) $data['category_id'] : null,
             $data['description'] ?? null,
             $data['status'] ?? null,
             (int) $data['amount_cents'],
             (string) $data['currency'],
-            isset($data['occurred_at']) ? Date::parse($data['occurred_at'])->toImmutable() : null,
-            isset($data['paid_at']) ? Date::parse($data['paid_at'])->toImmutable() : null,
+            $occurredAt,
+            $paidAt,
         );
     }
 }

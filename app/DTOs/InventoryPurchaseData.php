@@ -5,6 +5,7 @@ namespace App\DTOs;
 use App\Http\Requests\StoreInventoryPurchaseRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
+use Throwable;
 
 class InventoryPurchaseData
 {
@@ -27,12 +28,22 @@ class InventoryPurchaseData
      */
     public static function fromArray(array $data): self
     {
+        $paidAt = null;
+
+        if (isset($data['paid_at'])) {
+            try {
+                $paidAt = Date::parse($data['paid_at'])->toImmutable();
+            } catch (Throwable) {
+                $paidAt = null;
+            }
+        }
+
         return new self(
             isset($data['supplier_id']) ? (int) $data['supplier_id'] : null,
             isset($data['goods_receipt_id']) ? (int) $data['goods_receipt_id'] : null,
             (int) $data['total_cents'],
             (string) $data['currency'],
-            isset($data['paid_at']) ? Date::parse($data['paid_at'])->toImmutable() : null,
+            $paidAt,
             $data['status'] ?? null,
         );
     }

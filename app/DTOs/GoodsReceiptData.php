@@ -5,6 +5,7 @@ namespace App\DTOs;
 use App\Http\Requests\StoreGoodsReceiptRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
+use Throwable;
 
 class GoodsReceiptData
 {
@@ -35,11 +36,21 @@ class GoodsReceiptData
             $data['items'] ?? [],
         );
 
+        $receivedAt = null;
+
+        if (isset($data['received_at'])) {
+            try {
+                $receivedAt = Date::parse($data['received_at'])->toImmutable();
+            } catch (Throwable) {
+                $receivedAt = null;
+            }
+        }
+
         return new self(
             isset($data['supplier_id']) ? (int) $data['supplier_id'] : null,
             $data['reference'] ?? null,
             $data['notes'] ?? null,
-            isset($data['received_at']) ? Date::parse($data['received_at'])->toImmutable() : null,
+            $receivedAt,
             $items,
             $data['status'] ?? null,
         );

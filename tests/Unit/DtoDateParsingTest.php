@@ -157,6 +157,68 @@ it('keeps DTO datetime fields null when omitted', function (string $dtoClass, ar
         ],
         ['occurredAt'],
     ],
+    'income occurred_at and paid_at omitted' => [
+        IncomeData::class,
+        [
+            'amount_cents' => 7800,
+            'currency' => 'USD',
+        ],
+        ['occurredAt', 'paidAt'],
+    ],
+]);
+
+it('sets DTO datetime fields to null when malformed', function (string $dtoClass, array $data, array $properties) {
+    $dto = $dtoClass::fromArray($data);
+
+    foreach ($properties as $property) {
+        expect($dto->{$property})->toBeNull();
+    }
+})->with([
+    'cashier salary paid_at malformed' => [
+        CashierSalaryData::class,
+        [
+            'cashier_id' => 1,
+            'amount_cents' => 1500,
+            'currency' => 'USD',
+            'paid_at' => 'not-a-date',
+        ],
+        ['paidAt'],
+    ],
+    'expense occurred_at and paid_at malformed' => [
+        ExpenseData::class,
+        [
+            'amount_cents' => 4500,
+            'currency' => 'USD',
+            'occurred_at' => 'not-a-date',
+            'paid_at' => 'not-a-date',
+        ],
+        ['occurredAt', 'paidAt'],
+    ],
+    'sale payment paid_at malformed' => [
+        SalePaymentData::class,
+        [
+            'amount_cents' => 9000,
+            'paid_at' => 'not-a-date',
+        ],
+        ['paidAt'],
+    ],
+    'goods receipt received_at malformed' => [
+        GoodsReceiptData::class,
+        [
+            'items' => [],
+            'received_at' => 'not-a-date',
+        ],
+        ['receivedAt'],
+    ],
+    'inventory purchase paid_at malformed' => [
+        InventoryPurchaseData::class,
+        [
+            'total_cents' => 12000,
+            'currency' => 'USD',
+            'paid_at' => 'not-a-date',
+        ],
+        ['paidAt'],
+    ],
     'sale occurred_at malformed' => [
         SaleData::class,
         [
@@ -172,11 +234,13 @@ it('keeps DTO datetime fields null when omitted', function (string $dtoClass, ar
         ],
         ['occurredAt'],
     ],
-    'income occurred_at and paid_at omitted' => [
+    'income occurred_at and paid_at malformed' => [
         IncomeData::class,
         [
             'amount_cents' => 7800,
             'currency' => 'USD',
+            'occurred_at' => 'not-a-date',
+            'paid_at' => 'not-a-date',
         ],
         ['occurredAt', 'paidAt'],
     ],

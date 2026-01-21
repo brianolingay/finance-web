@@ -100,7 +100,7 @@ class CreateTransactionListener
                     $salary->amount_cents,
                     $salary->currency,
                     $salary,
-                    $salary->paid_at,
+                    $salary->paid_at ?? $salary->created_at,
                 ),
             );
         }

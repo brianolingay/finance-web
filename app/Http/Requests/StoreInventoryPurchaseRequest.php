@@ -48,6 +48,7 @@ class StoreInventoryPurchaseRequest extends FormRequest
             'total_cents' => ['required', 'integer', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],
             'paid_at' => ['nullable', 'date'],
+            'status' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

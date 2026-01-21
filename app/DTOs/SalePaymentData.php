@@ -4,6 +4,7 @@ namespace App\DTOs;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
+use Throwable;
 
 class SalePaymentData
 {
@@ -19,11 +20,21 @@ class SalePaymentData
      */
     public static function fromArray(array $data): self
     {
+        $paidAt = null;
+
+        if (isset($data['paid_at'])) {
+            try {
+                $paidAt = Date::parse($data['paid_at'])->toImmutable();
+            } catch (Throwable) {
+                $paidAt = null;
+            }
+        }
+
         return new self(
             (int) $data['amount_cents'],
             $data['method'] ?? null,
             $data['reference'] ?? null,
-            isset($data['paid_at']) ? Date::parse($data['paid_at'])->toImmutable() : null,
+            $paidAt,
         );
     }
 }

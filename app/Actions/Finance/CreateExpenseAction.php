@@ -24,10 +24,10 @@ class CreateExpenseAction
                 'paid_at' => $data->paidAt,
             ]);
 
-            event(new ExpenseCreated($expense));
-
             return $expense;
         });
+
+        event(new ExpenseCreated($expense));
 
         return $expense;
     }
