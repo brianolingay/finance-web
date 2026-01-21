@@ -25,23 +25,18 @@ return new class extends Migration
             $table->index(['account_id', 'month']);
         });
 
-        if (DB::getDriverName() === 'pgsql') {
+        $driver = DB::getDriverName();
+
+        if (in_array($driver, ['pgsql', 'mysql', 'sqlite'], true)) {
             DB::statement(
                 'ALTER TABLE budgets ADD COLUMN category_key BIGINT GENERATED ALWAYS AS (COALESCE(category_id, 0)) STORED'
             );
             DB::statement(
                 'CREATE UNIQUE INDEX budgets_account_category_month_unique ON budgets (account_id, category_key, month)'
             );
-        } elseif (DB::getDriverName() === 'mysql') {
+        } elseif ($driver === 'sqlsrv') {
             DB::statement(
-                'ALTER TABLE budgets ADD COLUMN category_key BIGINT GENERATED ALWAYS AS (COALESCE(category_id, 0)) STORED'
-            );
-            DB::statement(
-                'CREATE UNIQUE INDEX budgets_account_category_month_unique ON budgets (account_id, category_key, month)'
-            );
-        } elseif (DB::getDriverName() === 'sqlite') {
-            DB::statement(
-                'ALTER TABLE budgets ADD COLUMN category_key BIGINT GENERATED ALWAYS AS (COALESCE(category_id, 0)) STORED'
+                'ALTER TABLE budgets ADD category_key AS (ISNULL(category_id, 0)) PERSISTED'
             );
             DB::statement(
                 'CREATE UNIQUE INDEX budgets_account_category_month_unique ON budgets (account_id, category_key, month)'
@@ -54,13 +49,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('budgets', function (Blueprint $table) {
-            $table->dropUnique('budgets_account_category_month_unique');
-        });
+        $driver = DB::getDriverName();
 
-        if (DB::getDriverName() === 'pgsql') {
-            DB::statement('ALTER TABLE budgets DROP COLUMN IF EXISTS category_key');
-        } elseif (DB::getDriverName() === 'mysql') {
+        if (in_array($driver, ['pgsql', 'mysql', 'sqlite'], true)) {
+            DB::statement('DROP INDEX IF EXISTS budgets_account_category_month_unique');
+            DB::statement('ALTER TABLE budgets DROP COLUMN category_key');
+        } elseif ($driver === 'sqlsrv') {
+            DB::statement('DROP INDEX budgets_account_category_month_unique ON budgets');
             DB::statement('ALTER TABLE budgets DROP COLUMN category_key');
         }
 
