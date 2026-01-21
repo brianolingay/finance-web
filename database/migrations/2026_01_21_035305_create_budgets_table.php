@@ -23,15 +23,28 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['account_id', 'month']);
-            $table->unique(
-                ['account_id', 'category_id', 'month'],
-                'budgets_account_category_month_unique'
-            );
         });
 
         if (DB::getDriverName() === 'pgsql') {
             DB::statement(
-                'CREATE UNIQUE INDEX budgets_account_month_unique_null_category ON budgets (account_id, month) WHERE category_id IS NULL'
+                'ALTER TABLE budgets ADD COLUMN category_key BIGINT GENERATED ALWAYS AS (COALESCE(category_id, 0)) STORED'
+            );
+            DB::statement(
+                'CREATE UNIQUE INDEX budgets_account_category_month_unique ON budgets (account_id, category_key, month)'
+            );
+        } elseif (DB::getDriverName() === 'mysql') {
+            DB::statement(
+                'ALTER TABLE budgets ADD COLUMN category_key BIGINT GENERATED ALWAYS AS (COALESCE(category_id, 0)) STORED'
+            );
+            DB::statement(
+                'CREATE UNIQUE INDEX budgets_account_category_month_unique ON budgets (account_id, category_key, month)'
+            );
+        } elseif (DB::getDriverName() === 'sqlite') {
+            DB::statement(
+                'ALTER TABLE budgets ADD COLUMN category_key BIGINT GENERATED ALWAYS AS (COALESCE(category_id, 0)) STORED'
+            );
+            DB::statement(
+                'CREATE UNIQUE INDEX budgets_account_category_month_unique ON budgets (account_id, category_key, month)'
             );
         }
     }
@@ -46,7 +59,9 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'pgsql') {
-            DB::statement('DROP INDEX IF EXISTS budgets_account_month_unique_null_category');
+            DB::statement('ALTER TABLE budgets DROP COLUMN IF EXISTS category_key');
+        } elseif (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE budgets DROP COLUMN category_key');
         }
 
         Schema::dropIfExists('budgets');
