@@ -25,6 +25,17 @@ export interface NavItem {
 export interface SharedData {
     name: string;
     auth: Auth;
+    account?: {
+        id: number;
+        name: string;
+        type?: string;
+    };
+    abilities?: {
+        manageFinance: boolean;
+        manageInventory: boolean;
+        manageCashiers: boolean;
+        createSale: boolean;
+    };
     sidebarOpen: boolean;
     [key: string]: unknown;
 }
