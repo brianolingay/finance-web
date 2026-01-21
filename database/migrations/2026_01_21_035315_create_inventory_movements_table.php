@@ -25,7 +25,7 @@ return new class extends Migration
 
             $table->index(['account_id', 'occurred_at']);
             $table->index(['source_type', 'source_id']);
-            $table->index('product_id');
+            $table->index(['product_id', 'occurred_at']);
         });
     }
 
