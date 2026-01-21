@@ -3,13 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\Account;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AccountMember>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Supplier>
  */
-class AccountMemberFactory extends Factory
+class SupplierFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -20,8 +19,10 @@ class AccountMemberFactory extends Factory
     {
         return [
             'account_id' => Account::factory(),
-            'user_id' => User::factory(),
-            'role' => 'owner',
+            'name' => fake()->company(),
+            'email' => fake()->unique()->companyEmail(),
+            'phone' => fake()->phoneNumber(),
+            'notes' => fake()->sentence(),
         ];
     }
 }

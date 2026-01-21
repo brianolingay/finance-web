@@ -19,5 +19,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        if (config('app.demo_seed') && app()->environment(['local', 'development'])) {
+            $this->call(DemoSeeder::class);
+        }
     }
 }

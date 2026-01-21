@@ -27,7 +27,7 @@ class SaleFactory extends Factory
             },
             'status' => 'completed',
             'total_cents' => fake()->numberBetween(500, 20000),
-            'currency' => 'USD',
+            'currency' => 'PHP',
             'occurred_at' => now(),
         ];
     }
