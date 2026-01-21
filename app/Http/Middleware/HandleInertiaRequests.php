@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Account;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -35,12 +37,33 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $account = $request->route('account');
+        $accountData = null;
+        $abilities = null;
+
+        if ($account instanceof Account && $request->user()) {
+            $accountData = [
+                'id' => $account->id,
+                'name' => $account->name,
+                'type' => $account->type,
+            ];
+
+            $abilities = [
+                'manageFinance' => Gate::allows('manage-finance', $account),
+                'manageInventory' => Gate::allows('manage-inventory', $account),
+                'manageCashiers' => Gate::allows('manage-cashiers', $account),
+                'createSale' => Gate::allows('create-sale', $account),
+            ];
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user(),
             ],
+            'account' => $accountData,
+            'abilities' => $abilities,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

@@ -9,3 +9,13 @@ export function cn(...inputs: ClassValue[]) {
 export function toUrl(url: NonNullable<InertiaLinkProps['href']>): string {
     return typeof url === 'string' ? url : url.url;
 }
+
+export function decodeHtmlEntities(value: string): string {
+    if (typeof window === 'undefined' || typeof DOMParser === 'undefined') {
+        return value;
+    }
+
+    const parsed = new DOMParser().parseFromString(value, 'text/html');
+
+    return parsed.body.textContent ?? '';
+}
