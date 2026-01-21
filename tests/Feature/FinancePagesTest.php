@@ -34,7 +34,7 @@ it('returns expense totals on the expenses index', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('accounts/expenses/index')
-            ->where('totals.total_cents.USD', 2000)
+            ->where('totals.total_cents.PHP', 2000)
         );
 });
 
@@ -57,7 +57,7 @@ it('returns income totals on the incomes index', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('accounts/incomes/index')
-            ->where('totals.total_cents.USD', 10000)
+            ->where('totals.total_cents.PHP', 10000)
         );
 });
 
@@ -68,13 +68,13 @@ it('returns dashboard totals grouped by currency', function () {
     $income = Income::factory()->create([
         'account_id' => $account->id,
         'amount_cents' => 5000,
-        'currency' => 'USD',
+        'currency' => 'PHP',
     ]);
 
     $expense = Expense::factory()->create([
         'account_id' => $account->id,
         'amount_cents' => 2000,
-        'currency' => 'USD',
+        'currency' => 'PHP',
     ]);
 
     app(RecordTransactionAction::class)->run(new TransactionData(
@@ -100,8 +100,8 @@ it('returns dashboard totals grouped by currency', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('accounts/dashboard')
-            ->where('totals.credit_cents.USD', 5000)
-            ->where('totals.debit_cents.USD', 2000)
-            ->where('totals.net_cents.USD', 3000)
+            ->where('totals.credit_cents.PHP', 5000)
+            ->where('totals.debit_cents.PHP', 2000)
+            ->where('totals.net_cents.PHP', 3000)
         );
 });
