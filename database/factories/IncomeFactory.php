@@ -23,7 +23,7 @@ class IncomeFactory extends Factory
             'description' => fake()->sentence(),
             'status' => 'posted',
             'amount_cents' => fake()->numberBetween(100, 10000),
-            'currency' => 'USD',
+            'currency' => 'PHP',
             'occurred_at' => now(),
             'paid_at' => null,
         ];

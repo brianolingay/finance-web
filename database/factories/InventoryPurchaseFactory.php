@@ -23,7 +23,7 @@ class InventoryPurchaseFactory extends Factory
             'goods_receipt_id' => null,
             'status' => 'paid',
             'total_cents' => fake()->numberBetween(500, 50000),
-            'currency' => 'USD',
+            'currency' => 'PHP',
             'paid_at' => now(),
         ];
     }

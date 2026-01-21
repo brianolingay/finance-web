@@ -17,13 +17,15 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
+        $unitCost = fake()->numberBetween(100, 2000);
+
         return [
             'account_id' => Account::factory(),
             'name' => fake()->words(2, true),
             'sku' => strtoupper(fake()->bothify('SKU-####')),
             'description' => fake()->sentence(),
-            'unit_cost_cents' => fake()->numberBetween(100, 2000),
-            'unit_price_cents' => fake()->numberBetween(150, 3000),
+            'unit_cost_cents' => $unitCost,
+            'unit_price_cents' => $unitCost + fake()->numberBetween(150, 1500),
         ];
     }
 }

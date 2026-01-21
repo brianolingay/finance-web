@@ -20,7 +20,7 @@ class AccountFactory extends Factory
         return [
             'owner_user_id' => User::factory(),
             'name' => fake()->company(),
-            'type' => 'business',
+            'type' => 'finance',
         ];
     }
 }

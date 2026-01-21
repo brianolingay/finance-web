@@ -27,7 +27,7 @@ class CashierSalaryFactory extends Factory
             },
             'salary_rule_id' => null,
             'amount_cents' => fake()->numberBetween(1000, 50000),
-            'currency' => 'USD',
+            'currency' => 'PHP',
             'paid_at' => now(),
             'status' => 'paid',
         ];
